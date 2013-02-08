@@ -1,0 +1,46 @@
+*******************************************************************************************
+The preferred method for installing mfilemon is to use the automated installer available at
+
+http://sourceforge.net/projects/mfilemon/
+
+This procedure was intended for old versions that had no installer.
+*******************************************************************************************
+
+
+
+MFILEMON INSTALLATION
+=====================
+The supplied MONITOR.INF file should do the trick on Windows XP, but on Windows 2000
+platforms it won't work (hey, if someone out there knows why, please tell me
+the solution! The INF file is trivial and is derived from the DDK localmon sample).
+Here comes a simple installation procedure:
+
+WITH INF FILE
+-------------
+1) start control panel, printers
+2) right-click on the printer that you want to be connected to MFILEMON, choose "Properties"
+3) click on the "Ports" tab
+4) click "Add port..."
+5) click "New port type..."
+6) click "Browse..."
+7) select the MONITOR.INF from the folder where you unpacked MFILEMON
+8) Windows will warn that the software is not certified blah blah blah, click "Continue"
+9) now you have a new port type named "Multi File Port Monitor": you can select it and add
+   a new port managed by MFILEMON.
+
+
+WITHOUT INF FILE
+----------------
+1) copy mfilemon.dll and mfilemonUI.dll to %SystemRoot%\system32 folder
+2) start a DOS prompt, enter the folder where you unpacked MFILEMON
+3) execute "regmon.exe -r" to register the monitor DLLs.
+
+
+
+MFILEMON REMOVAL
+================
+Removal procedure is manual.
+1) make sure no printer driver is connected to a MFILEMON port, otherwise spooler will deny removal
+2) start a DOS prompt, enter the folder where you unpacked MFILEMON
+3) execute "regmon.exe -d" to deregister the monitor DLLs.
+4) optionally, you can remove mfilemon.dll and mfilemonUI.dll from %SystemRoot%\system32 folder
