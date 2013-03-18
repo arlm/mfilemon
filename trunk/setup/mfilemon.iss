@@ -54,15 +54,22 @@ MinVersion=0,5.0
 
 LicenseFile=gpl-3.0.rtf
 
+SignTool=lomosign /d "{#AppName}"
+
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
 
 [CustomMessages]
 en.errRegister=Error in port monitor registration!
-it.errRegister=Errore nella registrazione del port monitor!
 en.errUnregister=Error in port monitor unregistration! Continue with removal anyway?
+en.stoppingSpooler=Stopping spooler...
+en.startingSpooler=Starting spooler...
+
+it.errRegister=Errore nella registrazione del port monitor!
 it.errUnregister=Errore nella deregistrazione del port monitor! Continuare ugualmente con la rimozione?
+it.stoppingSpooler=Arresto dello spooler...
+it.startingSpooler=Avvio dello spooler...
 
 [Files]
 ; x64 files
@@ -85,91 +92,9 @@ Source: "..\conf\*"; DestDir: "{app}\conf"; Flags: ignoreversion
 Name: "{group}\ghostscript-mfilemon howto"; Filename: "{app}\ghostscript-mfilemon-howto.html"; WorkingDir: "{app}";
 
 [Code]
-type
-  SERVICE_STATUS = record
-    dwServiceType: Cardinal;
-    dwCurrentState: Cardinal;
-    dwControlsAccepted: Cardinal;
-    dwWin32ExitCode: Cardinal;
-    dwServiceSpecificExitCode: Cardinal;
-    dwCheckPoint: Cardinal;
-    dwWaitHint: Cardinal;
-  end;
-        
-  SERVICE_STATUS_PROCESS = record
-    dwServiceType: Cardinal;
-    dwCurrentState: Cardinal;
-    dwControlsAccepted: Cardinal;
-    dwWin32ExitCode: Cardinal;
-    dwServiceSpecificExitCode: Cardinal;
-    dwCheckPoint: Cardinal;
-    dwWaitHint: Cardinal;
-    dwProcessId: Cardinal;
-    dwServiceFlags :Cardinal;
-  end;
-
-  HANDLE = Cardinal;
-        
-const
-  SERVICE_QUERY_CONFIG        = $00000001;
-  SERVICE_CHANGE_CONFIG       = $00000002;
-  SERVICE_QUERY_STATUS        = $00000004;
-  SERVICE_START               = $00000010;
-  SERVICE_STOP                = $00000020;
-  SERVICE_ALL_ACCESS          = $000f01ff;
-  SC_MANAGER_ALL_ACCESS       = $000f003f;
-  SERVICE_WIN32_OWN_PROCESS   = $00000010;
-  SERVICE_WIN32_SHARE_PROCESS = $00000020;
-  SERVICE_WIN32               = $00000030;
-  SERVICE_INTERACTIVE_PROCESS = $00000100;
-  SERVICE_BOOT_START          = $00000000;
-  SERVICE_SYSTEM_START        = $00000001;
-  SERVICE_AUTO_START          = $00000002;
-  SERVICE_DEMAND_START        = $00000003;
-  SERVICE_DISABLED            = $00000004;
-  SERVICE_DELETE              = $00010000;
-  SERVICE_CONTROL_STOP        = $00000001;
-  SERVICE_CONTROL_PAUSE       = $00000002;
-  SERVICE_CONTROL_CONTINUE    = $00000003;
-  SERVICE_CONTROL_INTERROGATE = $00000004;
-  SERVICE_STOPPED             = $00000001;
-  SERVICE_START_PENDING       = $00000002;
-  SERVICE_STOP_PENDING        = $00000003;
-  SERVICE_RUNNING             = $00000004;
-  SERVICE_CONTINUE_PENDING    = $00000005;
-  SERVICE_PAUSE_PENDING       = $00000006;
-  SERVICE_PAUSED              = $00000007;
-  SC_STATUS_PROCESS_INFO      = $00000000;
-  SERVICES_ACTIVE_DATABASE    = 'ServicesActive';
-  
-  szSpoolerService = 'SPOOLER';
-
 var
   bIsAnUpdate: Boolean;
   bDeleteMonOk: Boolean;
-
-{----------------------------------------------------------------------------------------}
-function OpenSCManager(lpMachineName, lpDatabaseName: string; dwDesiredAccess: Cardinal): HANDLE;
-external 'OpenSCManagerW@advapi32.dll stdcall';
-
-function OpenService(hSCManager: HANDLE; lpServiceName: string; dwDesiredAccess: Cardinal): HANDLE;
-external 'OpenServiceW@advapi32.dll stdcall';
-
-function CloseServiceHandle(hSCObject: HANDLE): LongBool;
-external 'CloseServiceHandle@advapi32.dll stdcall';
-
-function StartService(hService: HANDLE; dwNumServiceArgs: Cardinal; lpServiceArgVectors: Cardinal): LongBool;
-external 'StartServiceW@advapi32.dll stdcall';
-
-function ControlService(hService: HANDLE; dwControl: Cardinal; var ServiceStatus: SERVICE_STATUS): LongBool;
-external 'ControlService@advapi32.dll stdcall';
-
-function QueryServiceStatusEx(hService: HANDLE; InfoLevel: Cardinal; var lpBuffer: SERVICE_STATUS_PROCESS;
-  cbBufSize: Cardinal; var pcbBytesNeeded: Cardinal): LongBool;
-external 'QueryServiceStatusEx@advapi32.dll stdcall';
-
-function GetTickCount: Cardinal;
-external 'GetTickCount@kernel32.dll stdcall';
 
 {----------------------------------------------------------------------------------------}
 function RegisterMonitor: LongBool;
@@ -191,92 +116,21 @@ begin
 end;
 
 {----------------------------------------------------------------------------------------}
-function WaitForServiceStatus(hService: HANDLE; status: Cardinal): Boolean;
+procedure StopSpooler;
 var
-  ssService: SERVICE_STATUS_PROCESS;
-  cbSize: Cardinal;
-  dwStartTickCount, dwOldCheckPoint, dwWaitTime: Cardinal;
-  bFirst: Boolean;
+  res: Integer;
 begin
-  Result := False;
-  bFirst := True;
-  while True do begin
-    if not QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO,
-    ssService, SizeOf(ssService), cbSize) then
-      Break;
-    case ssService.dwCurrentState of
-      SERVICE_START_PENDING, SERVICE_STOP_PENDING: begin
-        if bFirst or (ssService.dwCheckPoint > dwOldCheckPoint) then begin
-          dwStartTickCount := GetTickCount;
-          dwOldCheckPoint := ssService.dwCheckPoint;
-          bFirst := False;
-        end else if (GetTickCount - dwStartTickCount > ssService.dwWaitHint) then
-          Break;
-        dwWaitTime := ssService.dwWaitHint div 10;
-        if dwWaitTime < 1000 then
-          dwWaitTime := 1000
-        else if dwWaitTime > 10000 then
-          dwWaitTime := 10000;
-        Sleep(dwWaitTime);
-        Continue;
-      end;
-      SERVICE_RUNNING: begin
-        if status = SERVICE_RUNNING then
-          Result := True
-        else
-          Result := False;
-        Break;
-      end;
-      SERVICE_STOPPED: begin
-        if status = SERVICE_STOPPED then
-          Result := True
-        else
-          Result := False;
-        Break;
-      end;
-      else
-        Break;
-    end;
-  end;
+  WizardForm.StatusLabel.Caption := ExpandConstant('{cm:stoppingSpooler}');
+  Exec(ExpandConstant('{sys}\net.exe'), 'stop Spooler', '', SW_HIDE, ewWaitUntilTerminated, res);
 end;
 
 {----------------------------------------------------------------------------------------}
-function SetupStartService(ServiceName: string): Boolean;
+procedure StartSpooler;
 var
-  hSCM: HANDLE;
-  hService: HANDLE;
+  res: Integer;
 begin
-  Result := False;
-  hSCM := OpenSCManager('', SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
-  if hSCM <> 0 then begin
-    hService := OpenService(hSCM, ServiceName, SERVICE_ALL_ACCESS);
-    if hService <> 0 then begin
-      if StartService(hService, 0, 0) then
-        Result := WaitForServiceStatus(hService, SERVICE_RUNNING);
-      CloseServiceHandle(hService);
-    end;
-    CloseServiceHandle(hSCM);
-  end;
-end;
-
-{----------------------------------------------------------------------------------------}
-function SetupStopService(ServiceName: string): Boolean;
-var
-	hSCM: HANDLE;
-	hService: HANDLE;
-	Status: SERVICE_STATUS;
-begin
-	Result := False;
-	hSCM := OpenSCManager('', SERVICES_ACTIVE_DATABASE, SC_MANAGER_ALL_ACCESS);
-	if hSCM <> 0 then begin
-		hService := OpenService(hSCM, ServiceName, SERVICE_ALL_ACCESS);
-    if hService <> 0 then begin
-      if ControlService(hService, SERVICE_CONTROL_STOP, Status) then
-        Result := WaitForServiceStatus(hService, SERVICE_STOPPED);
-      CloseServiceHandle(hService);
-		end;
-    CloseServiceHandle(hSCM);
-	end;
+  WizardForm.StatusLabel.Caption := ExpandConstant('{cm:startingSpooler}');
+  Exec(ExpandConstant('{sys}\net.exe'), 'start Spooler', '', SW_HIDE, ewWaitUntilTerminated, res);
 end;
 
 {----------------------------------------------------------------------------------------}
@@ -300,12 +154,12 @@ begin
     ssInstall:
       begin
         if bIsAnUpdate then
-          SetupStopService(szSpoolerService);
+          StopSpooler;
       end;
     ssPostInstall:
       begin
         if bIsAnUpdate then
-          SetupStartService(szSpoolerService)
+          StartSpooler
         else begin
           if not RegisterMonitor then
             MsgBox(CustomMessage('errRegister'), mbError, MB_OK);
@@ -335,12 +189,12 @@ begin
     usUninstall:
       begin
         if not bDeleteMonOk then
-          SetupStopService(szSpoolerService);
+          StopSpooler;
       end;
     usPostUninstall:
       begin
         if not bDeleteMonOk then
-          SetupStartService(szSpoolerService);
+          StartSpooler;
       end;
   end;
 end;
