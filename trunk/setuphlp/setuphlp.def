@@ -1,0 +1,5 @@
+LIBRARY setuphlp
+
+EXPORTS
+	RegisterMonitor
+	UnregisterMonitor
