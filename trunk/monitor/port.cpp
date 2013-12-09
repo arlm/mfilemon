@@ -807,8 +807,12 @@ BOOL CPort::EndJob()
 		si.cb = sizeof(si);
 
 		//we're not going to give up in case of failure
-		CreateProcessW(NULL, m_pUserCommand->Value(), NULL, NULL,
-			FALSE, 0, NULL, (*m_szExecPath) ? m_szExecPath : NULL, &si, &m_procInfo);
+		if (m_hToken)
+			CreateProcessAsUserW(m_hToken, NULL, m_pUserCommand->Value(), NULL, NULL,
+				FALSE, 0, NULL, (*m_szExecPath) ? m_szExecPath : NULL, &si, &m_procInfo);
+		else
+			CreateProcessW(NULL, m_pUserCommand->Value(), NULL, NULL,
+				FALSE, 0, NULL, (*m_szExecPath) ? m_szExecPath : NULL, &si, &m_procInfo);
 	}
 
 	//maybe wait and close handles to child process
