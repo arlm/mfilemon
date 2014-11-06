@@ -272,3 +272,11 @@ CSearchSegment::CSearchSegment(LPCWSTR szString, LPCWSTR szSearch)
 {
 	wcscpy_s(m_szSearchBuffer, LENGTHOF(m_szSearchBuffer), szSearch);
 }
+
+/* CPrinterBinSegment */
+LPCWSTR CPrinterBinSegment::Value()
+{
+	_ASSERTE(m_pPort != NULL);
+	swprintf_s(m_szBuffer, LENGTHOF(m_szBuffer), L"%*s", m_nWidth, m_pPort->Bin());
+	return m_szBuffer;
+}

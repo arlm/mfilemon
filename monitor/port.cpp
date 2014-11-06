@@ -253,8 +253,10 @@ void CPort::Initialize()
 	m_hWorkEvt = NULL;
 	m_hDoneEvt = NULL;
 	m_nJobId = 0;
-	m_pJobInfo = NULL;
-	m_cbJobInfo = 0;
+	m_pJobInfo1 = NULL;
+	m_pJobInfo2 = NULL;
+	m_cbJobInfo1 = 0;
+	m_cbJobInfo2 = 0;
 	m_bPipeActive = FALSE;
 	InitializeCriticalSection(&m_threadData.csBuffer);
 	*m_szUser = L'\0';
@@ -313,8 +315,11 @@ CPort::~CPort()
 	if (m_szPrinterName)
 		delete[] m_szPrinterName;
 
-	if (m_pJobInfo)
-		delete[] m_pJobInfo;
+	if (m_pJobInfo1)
+		delete[] m_pJobInfo1;
+
+	if (m_pJobInfo2)
+		delete[] m_pJobInfo2;
 
 	if (m_hWriteThread)
 	{
@@ -397,18 +402,37 @@ BOOL CPort::StartJob(DWORD nJobId, LPWSTR szJobTitle, LPWSTR szPrinterName)
 		return FALSE;
 	}
 
+	//JOB_INFO_1
 	GetJobW(printer, nJobId, 1, NULL, 0, &cbNeeded);
 
-	if (!m_pJobInfo || m_cbJobInfo < cbNeeded)
+	if (!m_pJobInfo1 || m_cbJobInfo1 < cbNeeded)
 	{
-		if (m_pJobInfo)
-			delete[] m_pJobInfo;
+		if (m_pJobInfo1)
+			delete[] m_pJobInfo1;
 
-		m_cbJobInfo = cbNeeded;
-		m_pJobInfo = (JOB_INFO_1W*)new BYTE[cbNeeded];
+		m_cbJobInfo1 = cbNeeded;
+		m_pJobInfo1 = (JOB_INFO_1W*)new BYTE[cbNeeded];
 	}
 
-	if (!GetJobW(printer, nJobId, 1, (LPBYTE)m_pJobInfo, m_cbJobInfo, &cbNeeded))
+	if (!GetJobW(printer, nJobId, 1, (LPBYTE)m_pJobInfo1, m_cbJobInfo1, &cbNeeded))
+	{
+		g_pLog->Log(LOGLEVEL_ERRORS, this, L"CPort::StartJob: GetJobW failed (%i)", GetLastError());
+		return FALSE;
+	}
+
+	//JOB_INFO_2
+	GetJobW(printer, nJobId, 2, NULL, 0, &cbNeeded);
+
+	if (!m_pJobInfo2 || m_cbJobInfo2 < cbNeeded)
+	{
+		if (m_pJobInfo2)
+			delete[] m_pJobInfo2;
+
+		m_cbJobInfo2 = cbNeeded;
+		m_pJobInfo2 = (JOB_INFO_2W*)new BYTE[cbNeeded];
+	}
+
+	if (!GetJobW(printer, nJobId, 2, (LPBYTE)m_pJobInfo2, m_cbJobInfo2, &cbNeeded))
 	{
 		g_pLog->Log(LOGLEVEL_ERRORS, this, L"CPort::StartJob: GetJobW failed (%i)", GetLastError());
 		return FALSE;
@@ -422,16 +446,16 @@ BOOL CPort::StartJob(DWORD nJobId, LPWSTR szJobTitle, LPWSTR szPrinterName)
 	GetComputerNameW(szComputerName, &nSize);
 
 	m_bJobIsLocal = (
-		m_pJobInfo &&
+		m_pJobInfo1 &&
 		(
 			//the machine names are exactly the same...
-			_wcsicmp(szComputerName, m_pJobInfo->pMachineName) == 0 ||
+			_wcsicmp(szComputerName, m_pJobInfo1->pMachineName) == 0 ||
 			(
 				//...or we have two extra \\ in the machine name provided by the spooler
-				*m_pJobInfo->pMachineName &&
-				m_pJobInfo->pMachineName[0] == L'\\' &&
-				m_pJobInfo->pMachineName[1] == L'\\' &&
-				_wcsicmp(szComputerName, m_pJobInfo->pMachineName + 2) == 0
+				*m_pJobInfo1->pMachineName &&
+				m_pJobInfo1->pMachineName[0] == L'\\' &&
+				m_pJobInfo1->pMachineName[1] == L'\\' &&
+				_wcsicmp(szComputerName, m_pJobInfo1->pMachineName + 2) == 0
 			)
 		)
 	);
@@ -871,18 +895,18 @@ void CPort::SetConfig(LPPORTCONFIG pConfig)
 //-------------------------------------------------------------------------------------
 LPCWSTR CPort::UserName() const
 {
-	return m_pJobInfo
-		? m_pJobInfo->pUserName
+	return m_pJobInfo1
+		? m_pJobInfo1->pUserName
 		: (LPWSTR)L"";
 }
 
 //-------------------------------------------------------------------------------------
 LPCWSTR CPort::ComputerName() const
 {
-	if (m_pJobInfo)
+	if (m_pJobInfo1)
 	{
 		//strip backslashes off
-		LPWSTR pBuf = m_pJobInfo->pMachineName;
+		LPWSTR pBuf = m_pJobInfo1->pMachineName;
 
 		while (*pBuf == L'\\')
 			pBuf++;
@@ -896,9 +920,64 @@ LPCWSTR CPort::ComputerName() const
 //-------------------------------------------------------------------------------------
 LPWSTR CPort::JobTitle() const
 {
-	return m_pJobInfo
-		? m_pJobInfo->pDocument
+	return m_pJobInfo1
+		? m_pJobInfo1->pDocument
 		: (LPWSTR)L"";
+}
+
+//-------------------------------------------------------------------------------------
+LPWSTR CPort::Bin() const
+{
+	static WCHAR szBinName[16];
+
+	if (!m_pJobInfo2 || !m_pJobInfo2->pDevMode || (m_pJobInfo2->pDevMode->dmFields & DM_DEFAULTSOURCE) == 0)
+		return L"";
+
+	switch (m_pJobInfo2->pDevMode->dmDefaultSource)
+	{
+	case DMBIN_AUTO:
+		return L"AUTO";
+	case DMBIN_CASSETTE:
+		return L"CASSETTE";
+	case DMBIN_ENVELOPE:
+		return L"ENVELOPE";
+	case DMBIN_ENVMANUAL:
+		return L"ENVMANUAL";
+	//case DMBIN_FIRST:
+	//	return L"FIRST";
+	case DMBIN_FORMSOURCE:
+		return L"FORMSOURCE";
+	case DMBIN_LARGECAPACITY:
+		return L"LARGECAPACITY";
+	case DMBIN_LARGEFMT:
+		return L"LARGEFMT";
+	//case DMBIN_LAST:
+	//	return L"LAST";
+	case DMBIN_LOWER:
+		return L"LOWER";
+	case DMBIN_MANUAL:
+		return L"MANUAL";
+	case DMBIN_MIDDLE:
+		return L"MIDDLE";
+	//case DMBIN_ONLYONE:
+	//	return L"ONLYONE";
+	case DMBIN_TRACTOR:
+		return L"TRACTOR";
+	case DMBIN_SMALLFMT:
+		return L"SMALLFMT";
+	case DMBIN_UPPER:
+		return L"UPPER";
+	default:
+		if (m_pJobInfo2->pDevMode->dmDefaultSource >= DMBIN_USER)
+		{
+			swprintf_s(szBinName, LENGTHOF(szBinName), L"USER%hi", m_pJobInfo2->pDevMode->dmDefaultSource);
+		}
+		else
+		{
+			swprintf_s(szBinName, LENGTHOF(szBinName), L"%hi", m_pJobInfo2->pDevMode->dmDefaultSource);
+		}
+		return szBinName;
+	}
 }
 
 //-------------------------------------------------------------------------------------

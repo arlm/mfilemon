@@ -239,4 +239,16 @@ protected:
 	WCHAR m_szSearchBuffer[MAX_PATH];
 };
 
+/* printer bin segment */
+class CPrinterBinSegment : public CPatternSegment
+{
+public:
+	CPrinterBinSegment(int nWidth, CPort* pPort)
+		: CPatternSegment(nWidth, pPort)
+	{ }
+
+public:
+	virtual LPCWSTR Value();
+};
+
 #endif

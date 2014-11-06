@@ -218,6 +218,9 @@ CPattern::CPattern(LPCWSTR szPattern, CPort* pPort, BOOL bUserCommand)
 						case L'r':
 							pNewSeg = new CPrinterNameSegment(nWidth, m_pPort);
 							break;
+						case L'b':
+							pNewSeg = new CPrinterBinSegment(nWidth, m_pPort);
+							break;
 						default:
 							//not a valid field, get here from where we started parsing
 							//and put aside for a static field

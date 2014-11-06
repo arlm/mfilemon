@@ -61,6 +61,7 @@ Field format: %[width][.start]type\n\
     u:  user name (who started print job)\n\
     c:  computer name (from which came print job)\n\
     r:  printer name\n\
+    b:  output bin\n\
 To use the '%' character in a filename or user command, insert sequence '%%'.\n\
 For filename pattern, special \"search fields\" can be specified in this manner:\n\
 |literal|searchstring|\n\
@@ -106,6 +107,7 @@ Formato dei campi: %[width][.start]type\n\
     u:  nome utente (che ha lanciato il job di stampa)\n\
     c:  nome computer (da cui è partito il job di stampa)\n\
     r:  nome stampante\n\
+    b:  vassoio d'uscita\n\
 Per usare il carattere '%' in un nome file o comando utente, inserire la sequenza '%%'.\n\
 Per i nomi file, speciali \"campi di ricerca\" possono essere specificati come segue:\n\
 |stringaletterale|stringaricerca|\n\
