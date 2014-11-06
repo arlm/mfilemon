@@ -43,7 +43,7 @@
       </Message>
     </PostBuildEvent>
     <ISCC>
-      <AdditionalOptions>/Slomosign="signtool.exe sign /f S:\OSD_Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl $p $f" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Slomosign="signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl $p $f" %(AdditionalOptions)</AdditionalOptions>
     </ISCC>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -95,7 +95,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\OSD_Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Signature</Message>
@@ -126,7 +126,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\OSD_Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Signature</Message>
@@ -153,7 +153,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\OSD_Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Signature</Message>
@@ -183,7 +183,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\OSD_Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Signature</Message>

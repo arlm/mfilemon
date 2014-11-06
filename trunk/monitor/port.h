@@ -70,6 +70,7 @@ public:
 	LPCWSTR ComputerName() const;
 	LPWSTR FileName() const { return (LPWSTR)m_szFileName; }
 	LPWSTR Path() const { return (LPWSTR)m_szParent; }
+	LPWSTR Bin() const;
 	LPCWSTR User() const { return m_szUser; }
 	LPCWSTR Domain() const { return m_szDomain; }
 	LPCWSTR Password() const { return m_szPassword; }
@@ -110,8 +111,10 @@ private:
 	PROCESS_INFORMATION m_procInfo;
 //	LPWSTR m_szCommandLine;
 	DWORD m_nJobId;
-	JOB_INFO_1W* m_pJobInfo;
-	DWORD m_cbJobInfo;
+	JOB_INFO_1W* m_pJobInfo1;
+	JOB_INFO_2W* m_pJobInfo2;
+	DWORD m_cbJobInfo1;
+	DWORD m_cbJobInfo2;
 	BOOL m_bJobIsLocal;
 	WCHAR m_szParent[MAX_PATH];
 	WCHAR m_szUser[MAX_USER];
