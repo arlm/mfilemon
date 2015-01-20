@@ -36,3 +36,35 @@ BOOL __stdcall UnregisterMonitor()
 {
 	return DeleteMonitorW(NULL, NULL, pMonitorName);
 }
+
+BOOL __stdcall IsMonitorRegistered()
+{
+	DWORD pcbNeeded = 0;
+	DWORD pcReturned = 0;
+
+	EnumMonitorsW(NULL, 2, (LPBYTE)NULL, 0, &pcbNeeded, &pcReturned);
+	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+		return TRUE;
+	}
+
+	LPBYTE pPorts = (LPBYTE)malloc(sizeof(BYTE)*pcbNeeded);
+	memset(pPorts, 0, sizeof(BYTE)*pcbNeeded);
+	BOOL result = EnumMonitorsW(NULL, 2, pPorts, pcbNeeded, &pcbNeeded, &pcReturned);
+	if (!result) {
+		free(pPorts);
+		return TRUE;
+	}
+
+	MONITOR_INFO_2W *pinfo = (MONITOR_INFO_2W*)pPorts;
+
+	for (DWORD i = 0; i < pcReturned; i++)
+	{
+		if (wcscmp(pMonitorName, pinfo[i].pName) == 0) {
+			free(pPorts);
+			return TRUE;
+		}
+	}
+
+	free(pPorts);
+	return FALSE;
+}

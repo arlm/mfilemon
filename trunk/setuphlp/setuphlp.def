@@ -3,3 +3,4 @@ LIBRARY setuphlp
 EXPORTS
 	RegisterMonitor
 	UnregisterMonitor
+	IsMonitorRegistered
