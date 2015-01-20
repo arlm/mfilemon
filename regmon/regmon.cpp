@@ -19,6 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "stdafx.h"
 
+static const LPWSTR pMonitorName = L"Multi File Port Monitor";
+
 static LPTSTR szGPL =
 	_T("MFILEMON - print to file with automatic filename assignment\n")
 	_T("Copyright (C) 2007-2013 Monti Lorenzo\n")
@@ -42,7 +44,41 @@ static LPTSTR szUsage =
 	_T("Usage: regmon [-r | -d]\n")
 	_T("       -r: register monitor\n")
 	_T("       -d: deregister monitor\n")
+	_T("       -l: list registered monitors\n")
 	_T("**************************************");
+
+BOOL __stdcall ListRegisteredMonitors()
+{
+	DWORD pcbNeeded = 0;
+	DWORD pcReturned = 0;
+
+	EnumMonitors(NULL, 2, (LPBYTE)NULL, 0, &pcbNeeded, &pcReturned);
+	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+		//_tprintf(_T("%s\n"), "ERROR_INSUFFICIENT_BUFFER");
+		return FALSE;
+	}
+
+	LPBYTE pPorts = (LPBYTE)malloc(sizeof(BYTE)*pcbNeeded);
+	memset(pPorts, 0, sizeof(BYTE)*pcbNeeded);
+	BOOL result = EnumMonitors(NULL, 2, pPorts, pcbNeeded, &pcbNeeded, &pcReturned);
+	if (!result) {
+		DWORD dwErr = GetLastError();
+		free(pPorts);
+		SetLastError(dwErr);
+		//_tprintf(_T("%s\n"), "Could not get monitors.");
+		return FALSE;
+	}
+
+	MONITOR_INFO_2 *pinfo = (MONITOR_INFO_2*)pPorts;
+
+	for (DWORD i = 0; i < pcReturned; i++)
+	{
+		_tprintf(_T("%s\n"), pinfo[i].pName);
+	}
+
+	free(pPorts);
+	return TRUE;
+}
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -68,6 +104,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		szAction = _T("DeleteMonitor");
 		ret = DeleteMonitor(NULL, NULL, minfo.pName);
 	}
+	else if (argc > 1 && _tcsicmp(argv[1], _T("-l")) == 0)
+	{
+		szAction = _T("ListMonitors");
+		//_tprintf(_T("%s\n"), L"Start list monitors...");
+		ret = ListRegisteredMonitors();
+		//_tprintf(_T("%s\n\n"), L"End list monitors...");
+	}
 	else
 	{
 		return 1;
@@ -87,7 +130,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
-	_tprintf(_T("%s %s.\n"), szAction, ret == 0 ? _T("FAILED!!!") : _T("SUCCEEDED!!!"));
+	_tprintf(_T("%s %s\n"), szAction, ret == 0 ? _T("FAILED!!!") : _T("SUCCEEDED!!!"));
 
 	return (ret == 0);
 }

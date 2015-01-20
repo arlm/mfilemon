@@ -85,7 +85,7 @@ Source: "..\win32\release-ita\mfilemonUI.dll"; DestDir: "{sys}"; Flags: promptif
 ; files common to either architectures
 Source: "..\docs\ghostscript-mfilemon-howto.html"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\docs\images\*"; DestDir: "{app}\images"; Flags: ignoreversion
-Source: "release\setuphlp.dll"; DestDir: "{sys}"; Flags: dontcopy
+Source: "release\setuphlp.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\conf\*"; DestDir: "{app}\conf"; Flags: ignoreversion
 
 [Icons]
@@ -100,8 +100,14 @@ var
 function RegisterMonitor: LongBool;
 external 'RegisterMonitor@files:setuphlp.dll stdcall setuponly';
 
-function DeleteMonitor(pName, pEnvironment, pMonitorName: String): LongBool;
-external 'DeleteMonitorW@winspool.drv stdcall uninstallonly';
+function UnregisterMonitor: LongBool;
+external 'UnregisterMonitor@{app}\setuphlp.dll stdcall uninstallonly';
+
+function IsMonitorRegistered: LongBool;
+external 'IsMonitorRegistered@files:setuphlp.dll stdcall setuponly';
+
+function IsMonitorRegisteredUninstall: LongBool;
+external 'IsMonitorRegistered@{app}\setuphlp.dll stdcall uninstallonly';
 
 {----------------------------------------------------------------------------------------}
 function Is_x86: Boolean;
@@ -116,11 +122,24 @@ begin
 end;
 
 {----------------------------------------------------------------------------------------}
+function IsWizardFormCreated: Boolean;
+begin
+  Result := True;
+  try
+    WizardForm;
+  except
+    Result := False;
+  end;
+end;
+
+{----------------------------------------------------------------------------------------}
 procedure StopSpooler;
 var
   res: Integer;
 begin
-  WizardForm.StatusLabel.Caption := ExpandConstant('{cm:stoppingSpooler}');
+  { Avoid Internal error: An attempt was made to access WizardForm before it has been created.}
+  if IsWizardFormCreated then
+    WizardForm.StatusLabel.Caption := ExpandConstant('{cm:stoppingSpooler}');
   Exec(ExpandConstant('{sys}\net.exe'), 'stop Spooler', '', SW_HIDE, ewWaitUntilTerminated, res);
 end;
 
@@ -129,7 +148,9 @@ procedure StartSpooler;
 var
   res: Integer;
 begin
-  WizardForm.StatusLabel.Caption := ExpandConstant('{cm:startingSpooler}');
+  { Avoid Internal error: An attempt was made to access WizardForm before it has been created. }
+  if IsWizardFormCreated then
+    WizardForm.StatusLabel.Caption := ExpandConstant('{cm:startingSpooler}');
   Exec(ExpandConstant('{sys}\net.exe'), 'start Spooler', '', SW_HIDE, ewWaitUntilTerminated, res);
 end;
 
@@ -153,16 +174,35 @@ begin
   case CurStep of
     ssInstall:
       begin
-        if bIsAnUpdate then
+        if bIsAnUpdate then begin
+          Log('CODE: Stopping printer spooler.');
           StopSpooler;
+        end;
       end;
     ssPostInstall:
       begin
-        if bIsAnUpdate then
-          StartSpooler
-        else begin
-          if not RegisterMonitor then
-            MsgBox(CustomMessage('errRegister'), mbError, MB_OK);
+        if bIsAnUpdate then begin
+          Log('CODE: Starting printer spooler.');
+          StartSpooler;
+          if not IsMonitorRegistered then begin
+            Log('CODE: Monitor is not registered.');
+            if not RegisterMonitor then begin
+              Log('CODE: Could not register monitor.');
+              MsgBox(CustomMessage('errRegister'), mbError, MB_OK);
+            end;
+          end;
+        end else begin
+          if not RegisterMonitor then begin
+            Log('CODE: Could not register monitor.');
+            StopSpooler;
+            StartSpooler;
+            if not IsMonitorRegistered then begin
+              if not RegisterMonitor then begin
+                Log('CODE: Could not register monitor, second try.');
+                MsgBox(CustomMessage('errRegister'), mbError, MB_OK);
+              end;
+            end;
+          end;
         end;
       end;
   end;
@@ -171,14 +211,29 @@ end;
 {----------------------------------------------------------------------------------------}
 function InitializeUninstall: Boolean;
 begin
-  bDeleteMonOk := DeleteMonitor('', '', 'Multi File Port Monitor');
+  bDeleteMonOk := UnregisterMonitor;
   if bDeleteMonOk then
     Result := True
   else begin
-    if MsgBox(CustomMessage('errUnregister'), mbError, MB_YESNO) = IDYES then
-      Result := True
-    else
-      Result := False;
+    Log('CODE: Could not unregister monitor.');
+    if IsMonitorRegisteredUninstall then begin
+      StopSpooler;
+      StartSpooler;
+      bDeleteMonOk := UnregisterMonitor;
+      if bDeleteMonOk then begin
+        Log('CODE: Could unregister monitor, second try.');
+        Result := True;
+      end else begin
+        Log('CODE: Could not unregister monitor, second try.');
+        if MsgBox(CustomMessage('errUnregister'), mbError, MB_YESNO) = IDYES then
+          Result := True
+        else
+          Result := False;
+      end;
+    end else begin
+      Log('CODE: Monitor not found, unregister ok.');
+      Result := True;
+    end;
   end;
 end;
 
@@ -188,16 +243,17 @@ begin
   case CurUninstallStep of
     usUninstall:
       begin
-        if not bDeleteMonOk then
+        if not bDeleteMonOk then begin
+      Log('CODE: stop spooler.');
           StopSpooler;
+    end;
       end;
     usPostUninstall:
       begin
-        if not bDeleteMonOk then
+        if not bDeleteMonOk then begin
+      Log('CODE: start spooler.');
           StartSpooler;
+    end;
       end;
   end;
 end;
-
-
-
