@@ -150,7 +150,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -180,7 +180,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -210,7 +210,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -243,7 +243,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -274,7 +274,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -308,7 +308,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>signtool.exe sign /f S:\Lorenzo_Monti.pfx /p $(PFXPWD) /v /t http://time.certum.pl/ "$(TargetDir)$(TargetFileName)"</Command>
+      <Command>D:\proj\firma\firma.bat "$(TargetDir)$(TargetFileName)"</Command>
       <Message>Signature</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
