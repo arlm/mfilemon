@@ -244,16 +244,16 @@ begin
     usUninstall:
       begin
         if not bDeleteMonOk then begin
-      Log('CODE: stop spooler.');
+          Log('CODE: stop spooler.');
           StopSpooler;
-    end;
+        end;
       end;
     usPostUninstall:
       begin
         if not bDeleteMonOk then begin
-      Log('CODE: start spooler.');
+          Log('CODE: start spooler.');
           StartSpooler;
-    end;
+        end;
       end;
   end;
 end;
