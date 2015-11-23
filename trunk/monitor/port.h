@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -94,9 +94,9 @@ private:
 	HANDLE m_hWriteThread;
 	HANDLE m_hWorkEvt;
 	HANDLE m_hDoneEvt;
-	WCHAR m_szPortName[MAX_PATH];
-	WCHAR m_szOutputPath[MAX_PATH];
-	WCHAR m_szExecPath[MAX_PATH];
+	WCHAR m_szPortName[MAX_PATH + 1];
+	WCHAR m_szOutputPath[MAX_PATH + 1];
+	WCHAR m_szExecPath[MAX_PATH + 1];
 	LPWSTR m_szPrinterName;
 	DWORD m_cchPrinterName;
 	CPattern* m_pPattern;
@@ -106,7 +106,7 @@ private:
 	BOOL m_bWaitTermination;
 	BOOL m_bPipeData;
 	BOOL m_bPipeActive;
-	WCHAR m_szFileName[MAX_PATH];
+	WCHAR m_szFileName[MAX_PATH + 1];
 	HANDLE m_hFile;
 	PROCESS_INFORMATION m_procInfo;
 //	LPWSTR m_szCommandLine;
@@ -116,7 +116,7 @@ private:
 	DWORD m_cbJobInfo1;
 	DWORD m_cbJobInfo2;
 	BOOL m_bJobIsLocal;
-	WCHAR m_szParent[MAX_PATH];
+	WCHAR m_szParent[MAX_PATH + 1];
 	WCHAR m_szUser[MAX_USER];
 	WCHAR m_szDomain[MAX_DOMAIN];
 	WCHAR m_szPassword[MAX_PASSWORD];

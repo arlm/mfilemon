@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -299,11 +299,11 @@ void CPortList::RemoveFromRegistry(CPort* pPort)
 //-------------------------------------------------------------------------------------
 void CPortList::LoadFromRegistry()
 {
-	LPWSTR szPortName = new WCHAR[MAX_PATH];
-	LPWSTR szOutputPath = new WCHAR[MAX_PATH];
-	LPWSTR szFilePattern = new WCHAR[MAX_PATH];
+	LPWSTR szPortName = new WCHAR[MAX_PATH + 1];
+	LPWSTR szOutputPath = new WCHAR[MAX_PATH + 1];
+	LPWSTR szFilePattern = new WCHAR[MAX_PATH + 1];
 	LPWSTR szUserCommandPattern = new WCHAR[MAX_USERCOMMMAND];
-	LPWSTR szExecPath = new WCHAR[MAX_PATH];
+	LPWSTR szExecPath = new WCHAR[MAX_PATH + 1];
 	LPWSTR szUser = new WCHAR[MAX_USER];
 	LPWSTR szDomain = new WCHAR[MAX_DOMAIN];
 	LPBYTE pwBlob = new BYTE[MAX_PWBLOB];
@@ -336,7 +336,7 @@ void CPortList::LoadFromRegistry()
 	for (;;)
 	{
 		//read port name
-		cchName = MAX_PATH;
+		cchName = MAX_PATH + 1;
 		LONG res = pReg->fpEnumKey(hRoot, index++, szPortName, &cchName, NULL, g_pMonitorInit->hSpooler);
 		if (res == ERROR_NO_MORE_ITEMS)
 			break;
@@ -348,7 +348,7 @@ void CPortList::LoadFromRegistry()
 			continue;
 
 		//read OutputPath
-		cbData = MAX_PATH;
+		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
 		if (pReg->fpQueryValue(hKey, szOutputPathKey, NULL, (LPBYTE)szOutputPath, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
@@ -356,14 +356,14 @@ void CPortList::LoadFromRegistry()
 			szOutputPath[cbData / sizeof(WCHAR)] = L'\0';
 
 		//read FilePattern
-		cbData = MAX_PATH;
+		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
 		if (pReg->fpQueryValue(hKey, szFilePatternKey, NULL, (LPBYTE)szFilePattern, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
 		else
 			szFilePattern[cbData / sizeof(WCHAR)] = L'\0';
 		if (cbData == 0)
-			wcscpy_s(szFilePattern, MAX_PATH, CPattern::szDefaultFilePattern);
+			wcscpy_s(szFilePattern, MAX_PATH + 1, CPattern::szDefaultFilePattern);
 
 		//read Overwrite
 		cbData = sizeof(bOverwrite);
@@ -380,7 +380,7 @@ void CPortList::LoadFromRegistry()
 			szUserCommandPattern[cbData / sizeof(WCHAR)] = L'\0';
 
 		//read ExecPath
-		cbData = MAX_PATH;
+		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
 		if (pReg->fpQueryValue(hKey, szExecPathKey, NULL, (LPBYTE)szExecPath, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			*szExecPath = L'\0';

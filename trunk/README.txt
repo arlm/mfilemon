@@ -1,8 +1,11 @@
-rel. 1.5.1 (under development)
+rel. 1.5.1
+nov 23, 2015
 ------------------------
 * Added output bin field (%b)
 * Fixed a bug in user process creation (it was always launched as SYSTEM)
 * Fixed a monitor registration/deregistration issue during setup (thanks to Thomas Schumm)
+* Added temp dir field (%T)
+* Fixed some bugs related to buffers' size
 
 rel. 1.5.0
 jan 24, 2013

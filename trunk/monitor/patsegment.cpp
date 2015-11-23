@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -278,5 +278,14 @@ LPCWSTR CPrinterBinSegment::Value()
 {
 	_ASSERTE(m_pPort != NULL);
 	swprintf_s(m_szBuffer, LENGTHOF(m_szBuffer), L"%*s", m_nWidth, m_pPort->Bin());
+	return m_szBuffer;
+}
+
+/* CTempDirSegment */
+LPCWSTR CTempDirSegment::Value()
+{
+	WCHAR szTemp[MAX_PATH + 1];
+	GetTempPathW(LENGTHOF(szTemp), szTemp);
+	swprintf_s(m_szBuffer, LENGTHOF(m_szBuffer), L"%*s", m_nWidth, szTemp);
 	return m_szBuffer;
 }

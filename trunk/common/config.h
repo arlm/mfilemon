@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,12 +27,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //and user interface DLL
 typedef struct tagPORTCONFIG
 {
-	WCHAR szPortName[MAX_PATH];
-	WCHAR szOutputPath[MAX_PATH];
-	WCHAR szFilePattern[MAX_PATH];
+	WCHAR szPortName[MAX_PATH + 1];
+	WCHAR szOutputPath[MAX_PATH + 1];
+	WCHAR szFilePattern[MAX_PATH + 1];
 	BOOL bOverwrite;
 	WCHAR szUserCommandPattern[MAX_USERCOMMMAND];
-	WCHAR szExecPath[MAX_PATH];
+	WCHAR szExecPath[MAX_PATH + 1];
 	BOOL bWaitTermination;
 	BOOL bPipeData;
 	int nLogLevel;

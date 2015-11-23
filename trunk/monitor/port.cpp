@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -525,7 +525,7 @@ DWORD CPort::CreateOutputFile()
 	}
 
 	/*the search algorithm uses search strings from "search fields", if any*/
-	WCHAR szSearchPath[MAX_PATH];
+	WCHAR szSearchPath[MAX_PATH + 1];
 	wcscpy_s(szSearchPath, LENGTHOF(szSearchPath), m_szFileName);
 
 	if (m_hToken)
@@ -1021,8 +1021,8 @@ DWORD CPort::Logon()
 //-------------------------------------------------------------------------------------
 DWORD CPort::RecursiveCreateFolder(LPCWSTR szPath)
 {
-	WCHAR szPathBuf[MAX_PATH];
-	WCHAR szParent[MAX_PATH];
+	WCHAR szPathBuf[MAX_PATH + 1];
+	WCHAR szParent[MAX_PATH + 1];
 	LPCWSTR pPath = szPath;
 	size_t len;
 
