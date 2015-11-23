@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -57,6 +57,7 @@ Field format: %[width][.start]type\n\
     n:  minutes\n\
     s:  seconds\n\
     t:  print job title\n\
+	T:  temp directory path\n\
     j:  print job id\n\
     u:  user name (who started print job)\n\
     c:  computer name (from which came print job)\n\
@@ -103,6 +104,7 @@ Formato dei campi: %[width][.start]type\n\
     n:  minuti\n\
     s:  secondi\n\
     t:  titolo del job stampa\n\
+	T:  percorso directory temp\n\
     j:  id del job di stampa\n\
     u:  nome utente (che ha lanciato il job di stampa)\n\
     c:  nome computer (da cui è partito il job di stampa)\n\
@@ -149,7 +151,7 @@ void TrimControlText(HWND hDlg, int nIDDlgItem, LPWSTR lpString, int cchMax)
 //-------------------------------------------------------------------------------------
 void DoBrowse(HWND hDlg, int nIDDlgItem)
 {
-	WCHAR pszDisplayName[MAX_PATH];
+	WCHAR pszDisplayName[MAX_PATH + 1];
 	BROWSEINFO bi;
 	bi.hwndOwner		= hDlg;
 	bi.pidlRoot			= NULL;
@@ -162,7 +164,7 @@ void DoBrowse(HWND hDlg, int nIDDlgItem)
 	LPITEMIDLIST pidl = SHBrowseForFolderW(&bi);
 	if (pidl)
 	{
-		WCHAR szPath[MAX_PATH];
+		WCHAR szPath[MAX_PATH + 1];
 		SHGetPathFromIDListW(pidl, szPath);
 		IMalloc* pMalloc;
 		SHGetMalloc(&pMalloc);

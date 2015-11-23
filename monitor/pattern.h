@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -67,7 +67,7 @@ private:
 	CPatternSegment* m_pLastSegment;
 	LPWSTR m_szBuffer;
 	LPWSTR m_szSearchBuffer;
-	WCHAR m_szPattern[MAX_PATH];
+	WCHAR m_szPattern[MAX_PATH + 1];
 	CPort* m_pPort;
 	void AddSegment(CPatternSegment* pSegment);
 };

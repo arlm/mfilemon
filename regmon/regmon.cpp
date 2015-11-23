@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@ static const LPWSTR pMonitorName = L"Multi File Port Monitor";
 
 static LPTSTR szGPL =
 	_T("MFILEMON - print to file with automatic filename assignment\n")
-	_T("Copyright (C) 2007-2013 Monti Lorenzo\n")
+	_T("Copyright (C) 2007-2015 Monti Lorenzo\n")
 	_T("\n")
 	_T("This program is free software; you can redistribute it and/or\n")
 	_T("modify it under the terms of the GNU General Public License\n")

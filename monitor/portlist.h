@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -77,8 +77,8 @@ private:
 	static LPCWSTR szDomainKey;
 	static LPCWSTR szPasswordKey;
 	LPPORTREC m_pFirstPortRec;
-	WCHAR m_szMonitorName[MAX_PATH];
-	WCHAR m_szPortDesc[MAX_PATH];
+	WCHAR m_szMonitorName[MAX_PATH + 1];
+	WCHAR m_szPortDesc[MAX_PATH + 1];
 	CRITICAL_SECTION m_CSPortList;
 };
 

@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -39,7 +39,7 @@ CPattern::CPattern(LPCWSTR szPattern, CPort* pPort, BOOL bUserCommand)
 	wcscpy_s(m_szPattern, LENGTHOF(m_szPattern), szPattern);
 
 	//buffers for search fields
-	WCHAR szBuf[3][MAX_PATH];
+	WCHAR szBuf[3][MAX_PATH + 1];
 	WCHAR* pBuf[3] = {
 		szBuf[0],
 		szBuf[1],
@@ -205,6 +205,9 @@ CPattern::CPattern(LPCWSTR szPattern, CPort* pPort, BOOL bUserCommand)
 							break;
 						case L't':
 							pNewSeg = new CJobTitleSegment(nWidth, m_pPort);
+							break;
+						case L'T':
+							pNewSeg = new CTempDirSegment(nWidth);
 							break;
 						case L'j':
 							pNewSeg = new CJobIdSegment(nWidth, m_pPort);

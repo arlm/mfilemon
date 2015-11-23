@@ -1,6 +1,6 @@
 /*
 MFILEMON - print to file with automatic filename assignment
-Copyright (C) 2007-2013 Monti Lorenzo
+Copyright (C) 2007-2015 Monti Lorenzo
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -236,7 +236,7 @@ public:
 	virtual LPCWSTR SearchValue() { return m_szSearchBuffer; }
 
 protected:
-	WCHAR m_szSearchBuffer[MAX_PATH];
+	WCHAR m_szSearchBuffer[MAX_PATH + 1];
 };
 
 /* printer bin segment */
@@ -248,6 +248,18 @@ public:
 	{ }
 
 public:
+	virtual LPCWSTR Value();
+};
+
+/* temp dir segment */
+class CTempDirSegment : public CPatternSegment
+{
+public:
+	CTempDirSegment(int nWidth)
+		: CPatternSegment(nWidth)
+	{ }
+
+protected:
 	virtual LPCWSTR Value();
 };
 
