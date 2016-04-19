@@ -34,7 +34,9 @@ typedef struct tagPORTCONFIG
 	WCHAR szUserCommandPattern[MAX_USERCOMMMAND];
 	WCHAR szExecPath[MAX_PATH + 1];
 	BOOL bWaitTermination;
+	DWORD dwWaitTimeout;
 	BOOL bPipeData;
+	BOOL bHideProcess;
 	int nLogLevel;
 	WCHAR szUser[MAX_USER];
 	WCHAR szDomain[MAX_DOMAIN];

@@ -9,7 +9,7 @@
 #define szUserCommand "Comando utente (%f = nome file, %p = percorso)"
 #define szCmdPath "Esegui da"
 #define szPipeData "Usa pipe per inviare i dati al comando utente"
-#define szWaitProcess "Attendi la fine del processo (attenzione!)"
+#define szWaitProcess "Attendi la fine del processo per"
 #define szLogLevel "Livello log"
 #define szCancel "Annulla"
 #define szCaption2 "nome nuova porta"
@@ -19,5 +19,6 @@
 #define szRunAs "Esegui come utente"
 #define szDomain "Dominio"
 #define szPassword "Password"
+#define szHideProcess "Nascondi il processo"
 
 #endif

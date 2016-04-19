@@ -30,16 +30,12 @@ class CPort
 private:
 	void Initialize();
 	void Initialize(LPCWSTR szPortName);
-	void Initialize(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-		LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-		LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword);
+	void Initialize(LPPORTCONFIG pConfig);
 
 public:
 	CPort();
-	CPort(LPCWSTR szPortName);
-	CPort(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-		LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-		LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword);
+	explicit CPort(LPCWSTR szPortName);
+	explicit CPort(LPPORTCONFIG pPortConfig);
 	virtual ~CPort();
 	CPattern* GetPattern() const { return m_pPattern; }
 	void SetFilePatternString(LPCWSTR szPattern);
@@ -62,7 +58,9 @@ public:
 	LPCWSTR UserCommandPattern() const;
 	BOOL Overwrite() const { return m_bOverwrite; }
 	BOOL WaitTermination() const { return m_bWaitTermination; }
+	DWORD WaitTimeout() const { return m_dwWaitTimeout; }
 	BOOL PipeData() const { return m_bPipeData; }
+	BOOL HideProcess() const { return m_bHideProcess; }
 	LPWSTR PrinterName() const { return m_szPrinterName; }
 	DWORD JobId() const { return m_nJobId; }
 	LPWSTR JobTitle() const;
@@ -104,8 +102,10 @@ private:
 	BOOL m_bOverwrite;
 //	WCHAR m_szUserCommand[MAXUSERCOMMMAND];
 	BOOL m_bWaitTermination;
+	DWORD m_dwWaitTimeout;
 	BOOL m_bPipeData;
 	BOOL m_bPipeActive;
+	BOOL m_bHideProcess;
 	WCHAR m_szFileName[MAX_PATH + 1];
 	HANDLE m_hFile;
 	PROCESS_INFORMATION m_procInfo;

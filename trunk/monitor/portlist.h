@@ -47,9 +47,7 @@ public:
 	virtual ~CPortList();
 
 public:
-	void AddMfmPort(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-		LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-		LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword);
+	void AddMfmPort(LPPORTCONFIG pConfig);
 	void AddMfmPort(CPort* pNewPort);
 	void DeletePort(CPort* pPortToDelete);
 	CPort* FindPort(LPCWSTR szPortName);
@@ -71,11 +69,13 @@ private:
 	static LPCWSTR szUserCommandPatternKey;
 	static LPCWSTR szExecPathKey;
 	static LPCWSTR szWaitTerminationKey;
+	static LPCWSTR szWaitTimeoutKey;
 	static LPCWSTR szPipeDataKey;
 	static LPCWSTR szLogLevelKey;
 	static LPCWSTR szUserKey;
 	static LPCWSTR szDomainKey;
 	static LPCWSTR szPasswordKey;
+	static LPCWSTR szHideProcessKey;
 	LPPORTREC m_pFirstPortRec;
 	WCHAR m_szMonitorName[MAX_PATH + 1];
 	WCHAR m_szPortDesc[MAX_PATH + 1];

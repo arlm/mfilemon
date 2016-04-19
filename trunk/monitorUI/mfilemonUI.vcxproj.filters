@@ -56,9 +56,6 @@
     <ClInclude Include="..\common\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\lorenzo\Desktop\resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\comstrings.en">
