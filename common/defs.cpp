@@ -39,6 +39,7 @@ LPCWSTR szMsgNoAddOnRemoteSvr = L"Unable to add a port on a remote server.";
 LPCWSTR szMsgPortExists = L"A port with this name already exists.";
 LPCWSTR szMsgNoConfigOnRemoteSvr = L"Unable to configure a port on a remote server.";
 LPCWSTR szMsgNoDropOnRemoteSvr = L"Unable to drop a port on a remote server.";
+LPCWSTR szMsgBadInteger = L"Insert a valid number.";
 #endif
 
 #elif (MFILEMONLANG == 0x0410)
@@ -53,7 +54,8 @@ LPCWSTR szMsgInvalidFileName = L"Un pattern non può contenere i seguenti caratte
 LPCWSTR szMsgNoAddOnRemoteSvr = L"Impossibile aggiungere una porta su un server remoto.";
 LPCWSTR szMsgPortExists = L"Esiste già una porta con questo nome.";
 LPCWSTR szMsgNoConfigOnRemoteSvr = L"Impossibile configurare una porta su un server remoto.";
-LPCWSTR szMsgNoDropOnRemoteSvr = L"Unable to drop a port on a remote server.";
+LPCWSTR szMsgNoDropOnRemoteSvr = L"Impossibile eliminare una porta su un server remoto.";
+LPCWSTR szMsgBadInteger = L"Inserire un numero valido.";
 #endif
 
 #endif

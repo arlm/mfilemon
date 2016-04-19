@@ -249,6 +249,7 @@ BOOL CheckPattern(LPCWSTR szPattern)
 BOOL CALLBACK MonitorUIDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
 	HWND hWnd;
+	WCHAR buf[16];
 	static LPPORTCONFIG ppc = NULL;
 
 	switch (uMessage)
@@ -284,6 +285,13 @@ BOOL CALLBACK MonitorUIDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM l
 		hWnd = GetDlgItem(hDlg, ID_CHKWAITTERMINATION);
 		if (hWnd)
 			SendMessageW(hWnd, BM_SETCHECK, ppc->bWaitTermination ? BST_CHECKED : BST_UNCHECKED, 0);
+		//Wait timeout
+		swprintf_s(buf, LENGTHOF(buf), L"%u", ppc->dwWaitTimeout);
+		SetDlgItemTextW(hDlg, ID_EDTTIMEOUT, buf);
+		//Hide process
+		hWnd = GetDlgItem(hDlg, ID_HIDEPROCESS);
+		if (hWnd)
+			SendMessageW(hWnd, BM_SETCHECK, ppc->bHideProcess ? BST_CHECKED : BST_UNCHECKED, 0);
 		//Log Level
 		hWnd = GetDlgItem(hDlg, ID_CBLOGLEVEL);
 		if (hWnd)
@@ -373,6 +381,35 @@ BOOL CALLBACK MonitorUIDlgProc(HWND hDlg, UINT uMessage, WPARAM wParam, LPARAM l
 					default:
 						_ASSERTE(FALSE);
 						ppc->bWaitTermination = FALSE;
+						break;
+					}
+				}
+				//Wait timeout
+				TrimControlText(hDlg, ID_EDTTIMEOUT, buf, LENGTHOF(buf));
+				WCHAR* endptr;
+				ULONG ul = wcstoul(buf, &endptr, 10);
+				if (endptr == buf || *endptr || ul > 4294967)
+				{
+					MessageBoxW(hDlg, szMsgBadInteger, szAppTitle, MB_OK);
+					SetFocus(GetDlgItem(hDlg, ID_EDTTIMEOUT));
+					return TRUE;
+				}
+				ppc->dwWaitTimeout = ul;
+				//Hide process
+				hWnd = GetDlgItem(hDlg, ID_HIDEPROCESS);
+				if (hWnd)
+				{
+					switch (SendMessageW(hWnd, BM_GETCHECK, 0, 0))
+					{
+					case BST_CHECKED:
+						ppc->bHideProcess = TRUE;
+						break;
+					case BST_UNCHECKED:
+						ppc->bHideProcess = FALSE;
+						break;
+					default:
+						_ASSERTE(FALSE);
+						ppc->bHideProcess = FALSE;
 						break;
 					}
 				}

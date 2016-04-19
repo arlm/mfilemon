@@ -1,3 +1,8 @@
+rel. 1.5.2
+under development
+------------------------
+* Added external program wait timeout
+
 rel. 1.5.1
 nov 23, 2015
 ------------------------

@@ -101,8 +101,8 @@ static BOOL GetPrimaryToken(LPWSTR lpszUsername, LPWSTR lpszDomain, LPWSTR lpszP
 		* return linked token (it is primary due to TCB held).
 		*
 		* If linked token is not NULL and TCB was NOT enabled,
-		* returned token is restricted (filtered). This should not happen often
-		* , because there is a fair number of conditions that must hold true,
+		* returned token is restricted (filtered). This should not happen often,
+		* because there is a fair number of conditions that must hold true,
 		* 1) User is an Admin
 		* 2) User has no batch neither service logon privileges
 		* 3) Caller has no TCB privilege
@@ -225,13 +225,9 @@ CPort::CPort(LPCWSTR szPortName)
 }
 
 //-------------------------------------------------------------------------------------
-CPort::CPort(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-			 LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-			 LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword)
+CPort::CPort(LPPORTCONFIG pPortConfig)
 {
-	Initialize(szPortName, szOutputPath, szFilePattern, bOverwrite,
-		szUserCommandPattern, szExecPath, bWaitTermination, bPipeData,
-		szUser, szDomain, szPassword);
+	Initialize(pPortConfig);
 }
 
 //-------------------------------------------------------------------------------------
@@ -246,7 +242,9 @@ void CPort::Initialize()
 	m_pUserCommand = NULL;
 	*m_szExecPath = L'\0';
 	m_bWaitTermination = FALSE;
+	m_dwWaitTimeout = 0;
 	m_bPipeData = FALSE;
+	m_bHideProcess = TRUE;
 	*m_szFileName = L'\0';
 	m_hFile = INVALID_HANDLE_VALUE;
 	m_hWriteThread = NULL;
@@ -275,32 +273,38 @@ void CPort::Initialize(LPCWSTR szPortName)
 }
 
 //-------------------------------------------------------------------------------------
-void CPort::Initialize(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-					   LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-					   LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword)
+void CPort::Initialize(LPPORTCONFIG pConfig)
 {
-	Initialize(szPortName);
-	wcscpy_s(m_szOutputPath, LENGTHOF(m_szOutputPath), szOutputPath);
-	SetFilePatternString(szFilePattern);
-	m_bOverwrite = bOverwrite;
-	SetUserCommandString(szUserCommandPattern);
-	wcscpy_s(m_szExecPath, LENGTHOF(m_szExecPath), szExecPath);
-	m_bWaitTermination = bWaitTermination;
-	m_bPipeData = bPipeData;
-	wcscpy_s(m_szUser, LENGTHOF(m_szUser), szUser);
-	if (*szDomain)
-		wcscpy_s(m_szDomain, LENGTHOF(m_szDomain), szDomain);
-	wcscpy_s(m_szPassword, LENGTHOF(m_szPassword), szPassword);
+	Initialize(pConfig->szPortName);
+	wcscpy_s(m_szOutputPath, LENGTHOF(m_szOutputPath), pConfig->szOutputPath);
+	SetFilePatternString(pConfig->szFilePattern);
+	m_bOverwrite = pConfig->bOverwrite;
+	SetUserCommandString(pConfig->szUserCommandPattern);
+	wcscpy_s(m_szExecPath, LENGTHOF(m_szExecPath), pConfig->szExecPath);
+	m_bWaitTermination = pConfig->bWaitTermination;
+	m_dwWaitTimeout = pConfig->dwWaitTimeout;
+	if (m_dwWaitTimeout > 4294967)
+		m_dwWaitTimeout = 4294967;
+	m_bPipeData = pConfig->bPipeData;
+	m_bHideProcess = pConfig->bHideProcess;
+	wcscpy_s(m_szUser, LENGTHOF(m_szUser), pConfig->szUser);
+	Trim(m_szUser);
+	wcscpy_s(m_szDomain, LENGTHOF(m_szDomain), pConfig->szDomain);
+	Trim(m_szDomain);
+	if (!*m_szDomain)
+		wcscpy_s(m_szDomain, LENGTHOF(m_szDomain), L".");
+	wcscpy_s(m_szPassword, LENGTHOF(m_szPassword), pConfig->szPassword);
 
-	g_pLog->Log(LOGLEVEL_ALL, L"Initializing port %s", szPortName);
-	g_pLog->Log(LOGLEVEL_ALL, L" Output path:      %s", szOutputPath);
-	g_pLog->Log(LOGLEVEL_ALL, L" File pattern:     %s", szFilePattern);
-	g_pLog->Log(LOGLEVEL_ALL, L" Overwrite:        %s", (bOverwrite ? szTrue : szFalse));
-	g_pLog->Log(LOGLEVEL_ALL, L" User command:     %s", szUserCommandPattern);
-	g_pLog->Log(LOGLEVEL_ALL, L" Execute from:     %s", szExecPath);
-	g_pLog->Log(LOGLEVEL_ALL, L" Wait termination: %s", (bWaitTermination ? szTrue : szFalse));
-	g_pLog->Log(LOGLEVEL_ALL, L" Use pipe:         %s", (bPipeData ? szTrue : szFalse));
-	g_pLog->Log(LOGLEVEL_ALL, L" Run as:           %s\\%s", szDomain, szUser);
+	g_pLog->Log(LOGLEVEL_ALL, L"Initializing port %s", m_szPortName);
+	g_pLog->Log(LOGLEVEL_ALL, L" Output path:      %s", m_szOutputPath);
+	g_pLog->Log(LOGLEVEL_ALL, L" File pattern:     %s", pConfig->szFilePattern);
+	g_pLog->Log(LOGLEVEL_ALL, L" Overwrite:        %s", (m_bOverwrite ? szTrue : szFalse));
+	g_pLog->Log(LOGLEVEL_ALL, L" User command:     %s", pConfig->szUserCommandPattern);
+	g_pLog->Log(LOGLEVEL_ALL, L" Execute from:     %s", m_szExecPath);
+	g_pLog->Log(LOGLEVEL_ALL, L" Wait termination: %s", (m_bWaitTermination ? szTrue : szFalse));
+	g_pLog->Log(LOGLEVEL_ALL, L" Wait timeout:     %u", m_dwWaitTimeout);
+	g_pLog->Log(LOGLEVEL_ALL, L" Use pipe:         %s", (m_bPipeData ? szTrue : szFalse));
+	g_pLog->Log(LOGLEVEL_ALL, L" Run as:           %s\\%s", m_szDomain, m_szUser);
 }
 
 //-------------------------------------------------------------------------------------
@@ -539,6 +543,12 @@ DWORD CPort::CreateOutputFile()
 	}
 
 	DWORD dwRet = ERROR_SUCCESS;
+	DWORD dwCreationDisposition;
+
+	if (m_bOverwrite)
+		dwCreationDisposition = CREATE_ALWAYS; // request that a new file be created
+	else
+		dwCreationDisposition = CREATE_ALWAYS | CREATE_NEW; // request that we're also the creators of the file
 
 	/*start finding a file name*/
 	do
@@ -567,6 +577,7 @@ DWORD CPort::CreateOutputFile()
 		//is this file name usable?
 		//2009-08-04 we use search strings
 //		if (!m_bOverwrite && FileExists(m_szFileName))
+		/* moment A */
 		if (!m_bOverwrite && FilePatternExists(szSearchPath))
 			continue;
 
@@ -608,11 +619,13 @@ DWORD CPort::CreateOutputFile()
 			si.hStdInput = hStdinR;
 			si.hStdOutput = hStdoutW;
 			si.hStdError = hStdoutW;
-#ifdef _DEBUG
-			si.wShowWindow = SW_SHOW;
-#else
-			si.wShowWindow = SW_HIDE;
-#endif
+			if (m_bHideProcess)
+				si.wShowWindow = SW_HIDE;
+			else
+			{
+				si.wShowWindow = SW_SHOW;
+				si.lpDesktop = L"winsta0\\default";
+			}
 			si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 
 //			if (!BuildCommandLine())
@@ -672,11 +685,16 @@ DWORD CPort::CreateOutputFile()
 		else
 		{
 			//output on a regular file
+			/* moment B */
 			m_hFile = CreateFileW(m_szFileName, GENERIC_WRITE, 0,
-				NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 
 			if (m_hFile == INVALID_HANDLE_VALUE)
 			{
+				//did somebody already create the file between moment A and moment B?
+				if (!m_bOverwrite && GetLastError() == ERROR_FILE_EXISTS)
+					continue;
+
 				g_pLog->Log(LOGLEVEL_ERRORS, this, L"CPort::CreateOutputFile: CreateFileW failed (%i)", GetLastError());
 				dwRet = ERROR_FILE_INVALID;
 			}
@@ -848,14 +866,13 @@ BOOL CPort::EndJob()
 
 			while (!bDone)
 			{
-				switch (WaitForSingleObject(m_procInfo.hProcess, 10000))
+				switch (WaitForSingleObject(m_procInfo.hProcess, m_dwWaitTimeout ? m_dwWaitTimeout * 1000 : INFINITE))
 				{
 				case WAIT_OBJECT_0:
 					bDone = TRUE;
 					break;
 				case WAIT_TIMEOUT:
-					if (!m_bJobIsLocal ||
-						MessageBoxW(GetDesktopWindow(), szMsgUserCommandLocksSpooler, szAppTitle, MB_YESNO) == IDNO)
+					if (!m_bJobIsLocal || MessageBoxW(GetDesktopWindow(), szMsgUserCommandLocksSpooler, szAppTitle, MB_YESNO) == IDNO)
 						bDone = TRUE;
 					break;
 				}
@@ -873,22 +890,8 @@ BOOL CPort::EndJob()
 //-------------------------------------------------------------------------------------
 void CPort::SetConfig(LPPORTCONFIG pConfig)
 {
-	wcscpy_s(m_szPortName, LENGTHOF(m_szPortName), pConfig->szPortName);
-	wcscpy_s(m_szOutputPath, LENGTHOF(m_szOutputPath), pConfig->szOutputPath);
-	SetFilePatternString(pConfig->szFilePattern);
-	m_bOverwrite = pConfig->bOverwrite;
-	SetUserCommandString(pConfig->szUserCommandPattern);
-	wcscpy_s(m_szExecPath, LENGTHOF(m_szExecPath), pConfig->szExecPath);
-	m_bWaitTermination = pConfig->bWaitTermination;
-	m_bPipeData = pConfig->bPipeData;
 	g_pLog->SetLogLevel(pConfig->nLogLevel);
-	wcscpy_s(m_szUser, LENGTHOF(m_szUser), pConfig->szUser);
-	Trim(m_szUser);
-	wcscpy_s(m_szDomain, LENGTHOF(m_szDomain), pConfig->szDomain);
-	Trim(m_szDomain);
-	if (!*m_szDomain)
-		wcscpy_s(m_szDomain, LENGTHOF(m_szDomain), L".");
-	wcscpy_s(m_szPassword, LENGTHOF(m_szPassword), pConfig->szPassword);
+	Initialize(pConfig);
 	m_bLogonInvalidated = TRUE;
 }
 

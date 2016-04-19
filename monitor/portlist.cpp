@@ -32,11 +32,13 @@ LPCWSTR CPortList::szOverwriteKey = L"Overwrite";
 LPCWSTR CPortList::szUserCommandPatternKey = L"UserCommand";
 LPCWSTR CPortList::szExecPathKey = L"ExecPath";
 LPCWSTR CPortList::szWaitTerminationKey = L"WaitTermination";
+LPCWSTR CPortList::szWaitTimeoutKey = L"WaitTimeout";
 LPCWSTR CPortList::szPipeDataKey = L"PipeData";
 LPCWSTR CPortList::szLogLevelKey = L"LogLevel";
 LPCWSTR CPortList::szUserKey = L"User";
 LPCWSTR CPortList::szDomainKey = L"Domain";
 LPCWSTR CPortList::szPasswordKey = L"Password";
+LPCWSTR CPortList::szHideProcessKey = L"HideProcess";
 
 static BYTE aeskey[] = {
 	0x73, 0xb6, 0x45, 0x0c, 0x24, 0xc9, 0xfe, 0x6b, 0x74, 0xf8, 0xc2, 0xbe, 0x94, 0xd4, 0xdf, 0xd4,
@@ -212,14 +214,10 @@ BOOL CPortList::EnumMultiFilePorts(HANDLE hMonitor, LPCWSTR pName, DWORD Level, 
 }
 
 //-------------------------------------------------------------------------------------
-void CPortList::AddMfmPort(LPCWSTR szPortName, LPCWSTR szOutputPath, LPCWSTR szFilePattern, BOOL bOverwrite,
-						   LPCWSTR szUserCommandPattern, LPCWSTR szExecPath, BOOL bWaitTermination, BOOL bPipeData,
-						   LPCWSTR szUser, LPCWSTR szDomain, LPCWSTR szPassword)
+void CPortList::AddMfmPort(LPPORTCONFIG pConfig)
 {
 	//alloc port on the heap
-	CPort* pNewPort = new CPort(szPortName, szOutputPath, szFilePattern, bOverwrite,
-		szUserCommandPattern, szExecPath, bWaitTermination, bPipeData,
-		szUser, szDomain, szPassword);
+	CPort* pNewPort = new CPort(pConfig);
 
 	//add it to the list
 	AddMfmPort(pNewPort);
@@ -299,6 +297,10 @@ void CPortList::RemoveFromRegistry(CPort* pPort)
 //-------------------------------------------------------------------------------------
 void CPortList::LoadFromRegistry()
 {
+	LPPORTCONFIG pConfig = new PORTCONFIG;
+	LPBYTE pwBlob = new BYTE[MAX_PWBLOB];
+
+	/*
 	LPWSTR szPortName = new WCHAR[MAX_PATH + 1];
 	LPWSTR szOutputPath = new WCHAR[MAX_PATH + 1];
 	LPWSTR szFilePattern = new WCHAR[MAX_PATH + 1];
@@ -306,11 +308,13 @@ void CPortList::LoadFromRegistry()
 	LPWSTR szExecPath = new WCHAR[MAX_PATH + 1];
 	LPWSTR szUser = new WCHAR[MAX_USER];
 	LPWSTR szDomain = new WCHAR[MAX_DOMAIN];
-	LPBYTE pwBlob = new BYTE[MAX_PWBLOB];
 	LPWSTR szPassword = new WCHAR[MAX_PASSWORD];
 	BOOL bOverwrite;
 	BOOL bWaitTermination;
+	DWORD dwWaitTimeout;
 	BOOL bPipeData;
+	BOOL bHideProcess;
+	*/
 #ifdef __GNUC__
 	HANDLE hKey;
 #else
@@ -336,94 +340,106 @@ void CPortList::LoadFromRegistry()
 	for (;;)
 	{
 		//read port name
-		cchName = MAX_PATH + 1;
-		LONG res = pReg->fpEnumKey(hRoot, index++, szPortName, &cchName, NULL, g_pMonitorInit->hSpooler);
+		cchName = LENGTHOF(pConfig->szPortName);
+		LONG res = pReg->fpEnumKey(hRoot, index++, pConfig->szPortName, &cchName, NULL, g_pMonitorInit->hSpooler);
 		if (res == ERROR_NO_MORE_ITEMS)
 			break;
 		else if (res == ERROR_MORE_DATA)
 			continue;
 
 		//open port registry key
-		if (pReg->fpOpenKey(hRoot, szPortName, KEY_QUERY_VALUE, &hKey, g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
+		if (pReg->fpOpenKey(hRoot, pConfig->szPortName, KEY_QUERY_VALUE, &hKey, g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
 
 		//read OutputPath
-		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
-		if (pReg->fpQueryValue(hKey, szOutputPathKey, NULL, (LPBYTE)szOutputPath, &cbData,
+		cbData = sizeof(pConfig->szOutputPath);
+		if (pReg->fpQueryValue(hKey, szOutputPathKey, NULL, (LPBYTE)pConfig->szOutputPath, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
 		else
-			szOutputPath[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szOutputPath[cbData / sizeof(WCHAR)] = L'\0';
 
 		//read FilePattern
-		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
-		if (pReg->fpQueryValue(hKey, szFilePatternKey, NULL, (LPBYTE)szFilePattern, &cbData,
+		cbData = sizeof(pConfig->szFilePattern);
+		if (pReg->fpQueryValue(hKey, szFilePatternKey, NULL, (LPBYTE)pConfig->szFilePattern, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
 		else
-			szFilePattern[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szFilePattern[cbData / sizeof(WCHAR)] = L'\0';
 		if (cbData == 0)
-			wcscpy_s(szFilePattern, MAX_PATH + 1, CPattern::szDefaultFilePattern);
+			wcscpy_s(pConfig->szFilePattern, MAX_PATH + 1, CPattern::szDefaultFilePattern);
 
 		//read Overwrite
-		cbData = sizeof(bOverwrite);
-		if (pReg->fpQueryValue(hKey, szOverwriteKey, NULL, (LPBYTE)&bOverwrite, &cbData,
+		cbData = sizeof(pConfig->bOverwrite);
+		if (pReg->fpQueryValue(hKey, szOverwriteKey, NULL, (LPBYTE)&pConfig->bOverwrite, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
 			continue;
 
 		//read UserCommand
-		cbData = MAX_USERCOMMMAND;
-		if (pReg->fpQueryValue(hKey, szUserCommandPatternKey, NULL, (LPBYTE)szUserCommandPattern,
+		cbData = sizeof(pConfig->szUserCommandPattern);
+		if (pReg->fpQueryValue(hKey, szUserCommandPatternKey, NULL, (LPBYTE)pConfig->szUserCommandPattern,
 			&cbData, g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			*szUserCommandPattern = L'\0';
+			*pConfig->szUserCommandPattern = L'\0';
 		else
-			szUserCommandPattern[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szUserCommandPattern[cbData / sizeof(WCHAR)] = L'\0';
 
 		//read ExecPath
-		cbData = (MAX_PATH + 1) * sizeof(WCHAR);
-		if (pReg->fpQueryValue(hKey, szExecPathKey, NULL, (LPBYTE)szExecPath, &cbData,
+		cbData = sizeof(pConfig->szExecPath);
+		if (pReg->fpQueryValue(hKey, szExecPathKey, NULL, (LPBYTE)pConfig->szExecPath, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			*szExecPath = L'\0';
+			*pConfig->szExecPath = L'\0';
 		else
-			szExecPath[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szExecPath[cbData / sizeof(WCHAR)] = L'\0';
 
 		//read Wait termination
-		cbData = sizeof(bWaitTermination);
-		if (pReg->fpQueryValue(hKey, szWaitTerminationKey, NULL, (LPBYTE)&bWaitTermination, &cbData,
+		cbData = sizeof(pConfig->bWaitTermination);
+		if (pReg->fpQueryValue(hKey, szWaitTerminationKey, NULL, (LPBYTE)&pConfig->bWaitTermination, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			bWaitTermination = FALSE;
+			pConfig->bWaitTermination = FALSE;
+
+		//read Wait timeout
+		cbData = sizeof(pConfig->dwWaitTimeout);
+		if (pReg->fpQueryValue(hKey, szWaitTimeoutKey, NULL, (LPBYTE)&pConfig->dwWaitTimeout, &cbData,
+			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
+			pConfig->dwWaitTimeout = 10;
 
 		//read Pipe data
-		cbData = sizeof(bPipeData);
-		if (pReg->fpQueryValue(hKey, szPipeDataKey, NULL, (LPBYTE)&bPipeData, &cbData,
+		cbData = sizeof(pConfig->bPipeData);
+		if (pReg->fpQueryValue(hKey, szPipeDataKey, NULL, (LPBYTE)&pConfig->bPipeData, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			bPipeData = FALSE;
+			pConfig->bPipeData = FALSE;
+
+		//read Hide process
+		cbData = sizeof(pConfig->bHideProcess);
+		if (pReg->fpQueryValue(hKey, szHideProcessKey, NULL, (LPBYTE)&pConfig->bHideProcess, &cbData,
+			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
+			pConfig->bHideProcess = TRUE;
 
 		//read User
-		cbData = MAX_USER;
-		if (pReg->fpQueryValue(hKey, szUserKey, NULL, (LPBYTE)szUser, &cbData,
+		cbData = sizeof(pConfig->szUser);
+		if (pReg->fpQueryValue(hKey, szUserKey, NULL, (LPBYTE)pConfig->szUser, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			*szUser = L'\0';
+			*pConfig->szUser = L'\0';
 		else
-			szUser[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szUser[cbData / sizeof(WCHAR)] = L'\0';
 
-		Trim(szUser);
+		Trim(pConfig->szUser);
 
 		//read Domain
-		cbData = MAX_DOMAIN;
-		if (pReg->fpQueryValue(hKey, szDomainKey, NULL, (LPBYTE)szDomain, &cbData,
+		cbData = sizeof(pConfig->szDomain);
+		if (pReg->fpQueryValue(hKey, szDomainKey, NULL, (LPBYTE)pConfig->szDomain, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS)
-			*szDomain = L'\0';
+			*pConfig->szDomain = L'\0';
 		else
-			szDomain[cbData / sizeof(WCHAR)] = L'\0';
+			pConfig->szDomain[cbData / sizeof(WCHAR)] = L'\0';
 
-		Trim(szDomain);
+		Trim(pConfig->szDomain);
 
 		//read Password
 		cbData = MAX_PWBLOB;
 		if (pReg->fpQueryValue(hKey, szPasswordKey, NULL, (LPBYTE)pwBlob, &cbData,
 			g_pMonitorInit->hSpooler) != ERROR_SUCCESS || cbData < 32)
-			*szPassword = L'\0';
+			*pConfig->szPassword = L'\0';
 		else
 		{
 			LPBYTE iv = pwBlob;
@@ -432,8 +448,8 @@ void CPortList::LoadFromRegistry()
 			int outlen1, outlen2;
 
 			if (EVP_DecryptInit(&ctx, EVP_aes_256_cbc(), aeskey, iv) &&
-				EVP_DecryptUpdate(&ctx, (LPBYTE)szPassword, &outlen1, pwData, cbData - 16) &&
-				EVP_DecryptFinal(&ctx, (LPBYTE)szPassword + outlen1, &outlen2))
+				EVP_DecryptUpdate(&ctx, (LPBYTE)pConfig->szPassword, &outlen1, pwData, cbData - 16) &&
+				EVP_DecryptFinal(&ctx, (LPBYTE)pConfig->szPassword + outlen1, &outlen2))
 			{
 				EVP_CIPHER_CTX_cleanup(&ctx);
 
@@ -442,11 +458,11 @@ void CPortList::LoadFromRegistry()
 				if (len == 0)
 					len = 1;
 
-				szPassword[len - 1] = L'\0';
+				pConfig->szPassword[len - 1] = L'\0';
 			}
 			else
 			{
-				*szPassword = L'\0';
+				*pConfig->szPassword = L'\0';
 			}
 		}
 
@@ -454,20 +470,11 @@ void CPortList::LoadFromRegistry()
 		pReg->fpCloseKey(hKey, g_pMonitorInit->hSpooler);
 
 		//add the port
-		AddMfmPort(szPortName, szOutputPath, szFilePattern, bOverwrite, szUserCommandPattern,
-			szExecPath, bWaitTermination, bPipeData,
-			szUser, szDomain, szPassword);
+		AddMfmPort(pConfig);
 	}
 
-	delete[] szPortName;
-	delete[] szOutputPath;
-	delete[] szFilePattern;
-	delete[] szUserCommandPattern;
-	delete[] szExecPath;
-	delete[] szUser;
-	delete[] szDomain;
 	delete[] pwBlob;
-	delete[] szPassword;
+	delete pConfig;
 }
 
 //-------------------------------------------------------------------------------------
@@ -539,10 +546,20 @@ void CPortList::SaveToRegistry()
 			pReg->fpSetValue(hKey, szWaitTerminationKey, REG_DWORD, (LPBYTE)&bWaitTermination,
 				sizeof(bWaitTermination), g_pMonitorInit->hSpooler);
 
+			//Wait timeout
+			DWORD dwWaitTimeout = pPortRec->m_pPort->WaitTimeout();
+			pReg->fpSetValue(hKey, szWaitTimeoutKey, REG_DWORD, (LPBYTE)&dwWaitTimeout,
+				sizeof(dwWaitTimeout), g_pMonitorInit->hSpooler);
+
 			//Pipe data
 			BOOL bPipeData = pPortRec->m_pPort->PipeData();
 			pReg->fpSetValue(hKey, szPipeDataKey, REG_DWORD, (LPBYTE)&bPipeData,
 				sizeof(bPipeData), g_pMonitorInit->hSpooler);
+
+			//Hide process
+			BOOL bHideProcess = pPortRec->m_pPort->HideProcess();
+			pReg->fpSetValue(hKey, szHideProcessKey, REG_DWORD, (LPBYTE)&bHideProcess,
+				sizeof(bHideProcess), g_pMonitorInit->hSpooler);
 
 			//User
 			szBuf = pPortRec->m_pPort->User();

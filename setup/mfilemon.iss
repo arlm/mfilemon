@@ -40,6 +40,7 @@ VersionInfoVersion={#FileVerStr}
 CreateAppDir=yes
 DefaultDirName={pf}\mfilemon
 DefaultGroupName=Multi File Port Monitor
+DisableWelcomePage=no
 
 ; we take care of these on our own
 CloseApplications=no
@@ -54,7 +55,7 @@ MinVersion=0,5.0
 
 LicenseFile=gpl-3.0.rtf
 
-SignTool=lomosign /d "{#AppName}"
+SignTool=lorenzomonti /d "{#AppName}"
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"

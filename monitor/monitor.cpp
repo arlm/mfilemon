@@ -382,7 +382,9 @@ DWORD WINAPI MfmXcvDataPort(HANDLE hXcv, LPCWSTR pszDataName, PBYTE pInputData,
 			wcscpy_s(ppc->szUserCommandPattern, LENGTHOF(ppc->szUserCommandPattern), pXCVDATA->pPort->UserCommandPattern());
 			wcscpy_s(ppc->szExecPath, LENGTHOF(ppc->szExecPath), pXCVDATA->pPort->ExecPath());
 			ppc->bWaitTermination = pXCVDATA->pPort->WaitTermination();
+			ppc->dwWaitTimeout = pXCVDATA->pPort->WaitTimeout();
 			ppc->bPipeData = pXCVDATA->pPort->PipeData();
+			ppc->bHideProcess = pXCVDATA->pPort->HideProcess();
 			ppc->nLogLevel = g_pLog->GetLogLevel();
 			wcscpy_s(ppc->szUser, LENGTHOF(ppc->szUser), pXCVDATA->pPort->User());
 			wcscpy_s(ppc->szDomain, LENGTHOF(ppc->szDomain), pXCVDATA->pPort->Domain());

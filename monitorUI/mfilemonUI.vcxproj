@@ -312,7 +312,6 @@
     <ClInclude Include="..\common\autoclean.h" />
     <ClInclude Include="..\common\config.h" />
     <ClInclude Include="..\common\defs.h" />
-    <ClInclude Include="C:\Users\lorenzo\Desktop\resource.h" />
     <ClInclude Include="monitorUI.h" />
     <ClInclude Include="..\common\monutils.h" />
     <ClInclude Include="resource.h" />

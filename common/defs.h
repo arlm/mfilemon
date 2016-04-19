@@ -48,6 +48,7 @@ extern LPCWSTR szMsgNoAddOnRemoteSvr;
 extern LPCWSTR szMsgPortExists;
 extern LPCWSTR szMsgNoConfigOnRemoteSvr;
 extern LPCWSTR szMsgNoDropOnRemoteSvr;
+extern LPCWSTR szMsgBadInteger;
 #endif
 
 #endif
