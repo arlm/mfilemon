@@ -548,7 +548,7 @@ DWORD CPort::CreateOutputFile()
 	if (m_bOverwrite)
 		dwCreationDisposition = CREATE_ALWAYS; // request that a new file be created
 	else
-		dwCreationDisposition = CREATE_ALWAYS | CREATE_NEW; // request that we're also the creators of the file
+		dwCreationDisposition = CREATE_NEW; // request that we're also the creators of the file
 
 	/*start finding a file name*/
 	do
